@@ -58,6 +58,22 @@ class wework extends control
 
         $webhookID = $_GET['webhookID'];
 
+        // 关键：获取 webhook 信息
+        $webhook = $this->webhook->getByID($webhookID);
+
+        if(!$webhook)
+        {
+            echo "webhook 不存在";
+            return false;
+        }
+
+        // 关键：校验 type
+        if($webhook->type !== 'wechatuser')
+        {
+            echo "该 webhook 类型不是 wechatuser，禁止绑定";
+            return false;
+        }
+
         $allUser = $this->user->getList();
         $userList = array();
         foreach ($allUser as $user){
@@ -73,7 +89,7 @@ class wework extends control
         $this->dao->delete()->from(TABLE_OAUTH)
             ->where('providerType')->eq('webhook')
             ->andWhere('providerID')->eq($webhookID)
-            ->andWhere('account')->in(array_keys($userList))
+            ->andWhere('account')->in($userList)
             ->exec();
 
         foreach($userList as  $userid)
